@@ -108,58 +108,6 @@ function persistTokens(spotifyApi) {
   }
 }
 
-// bypass()
-//   .then(main)
-//   .catch(function (err) {
-//     console.error(err);
-//     process.exit(1);
-//   });
-
-function bypass() {
-  var spotifyApi = new SpotifyWebApi({
-    clientId : '5c12a599bc8447dea6b4a6b8cba47aa7',
-    clientSecret : '97f9160a90fc48c881c7a7bae613a735',
-    redirectUri: 'http://localhost:5000/token'
-  });
-
-  const access_token = 'BQAtrLO1yCkdwlfIeimqrqzgAFHmGJ9VI-bi6YQGhJoXaav7tk896A-R7reuB7_dnaKX_j3RT1NMAipDfHX0-QlGdrtPdxqXzgji5OwY_7OdTG8WOHF0YqYLy8ooXNH_z5BkTBkLzkp2OHM73f5p0_ht90-dKBEC41-M16hDzGLefhe2EoDZS5kB9Vn-BIe6XyHxKO_Ws2Auyg';
-  const refresh_token = 'AQBgIVUtb5YYRmkWfEL2yFRsmW4kBbl-g7dJV2l0-HjzaVE879ofAT0pHecPqLEMUoYpy_S2bEazbVUlbHMG1f32DSfW4eINLjBW3vBZEouE-8UtaH7a9MSBm2s2ZSNBVs0';
-
-  spotifyApi.setAccessToken(access_token);
-  spotifyApi.setRefreshToken(refresh_token);
-  return Promise.resolve(spotifyApi);
-}
-
-function auth() {
-
-
-  var token = new Promise(function(resolve) {
-    var server = createServer(function({url}, res) {
-      resolve(parse(url, true).query.code);
-      res.statusCode = 200;
-      return res.end();
-    });
-    server.listen(5000);
-  });
-
-  var authorizeURL = spotifyApi.createAuthorizeURL(scopes);
-
-  console.log(authorizeURL);
-
-  return token
-    .then(x => spotifyApi.authorizationCodeGrant(x))
-    .then(function(data) {
-      console.log('The token expires in ' + data.body['expires_in']);
-      console.log('The access token is ' + data.body['access_token']);
-      console.log('The refresh token is ' + data.body['refresh_token']);
-
-      // Set the access token on the API object to use it in later calls
-      spotifyApi.setAccessToken(data.body['access_token']);
-      spotifyApi.setRefreshToken(data.body['refresh_token']);
-      return spotifyApi;
-    })
-}
-
 const scopes = [
   'user-read-private',
   'user-read-email',
