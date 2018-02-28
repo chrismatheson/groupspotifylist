@@ -1,13 +1,13 @@
-const { uniq, slice, flatMap, compose, shuffle } = require('lodash/fp');
+const { uniq, slice, flatMap, compose, shuffle, take, rest } = require('lodash/fp');
 
-module.exports = function (lists) {
-    const targetNumber = (Object.keys(lists).length * 25);
-    const firstPass = fromEachListTake(0, 24)(lists);
-    const rest = compose(shuffle, fromEachListTake(25, 35))(lists);
+module.exports = function (lists, count = 25) {
+    const targetNumber = (Object.keys(lists).length * count);
+    const firstPass = fromEachListTake(slice(0, count))(lists);
+    const rest = compose(shuffle, fromEachListTake(slice(count, count + 10)))(lists);
 
     const missingCount = targetNumber - firstPass.length;
 
-    return firstPass.concat(rest.slice(0, missingCount - 1));
+    return firstPass.concat(take(missingCount, rest));
 };
 
-const fromEachListTake = (from, to) =>  compose(uniq, flatMap(slice(from, to)))
+const fromEachListTake = (take) =>  compose(uniq, flatMap(take))
