@@ -48,7 +48,7 @@ app.get('/', function (req, res) {
 
 app.listen(5000);
 
-const users = ['chrismatheson', 'savrinni', 'musicalkaye', 'randallwood', 'garethh', '1138476860', 'marshallonthemove']
+const users = ['chrismatheson', 'savrinni', 'musicalkaye', 'randallwood', 'garethh', '1138476860', 'marshallonthemove', 'steffyj86'];
 
 async function main(spotifyApi) {
   console.log(('refreshing access token'));
