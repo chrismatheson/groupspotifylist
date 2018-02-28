@@ -1,10 +1,10 @@
 const SpotifyWebApi = require('spotify-web-api-node');
-const { map } = require('bluebird');
+const Promise = require('bluebird');
 const { createServer } = require('http');
 const { parse } = require('url');
 const express = require('express');
 const algo = require('./algo');
-const {fromPairs, compose} = require('lodash/fp');
+const {fromPairs, compose, contains} = require('lodash/fp');
 
 const app = express();
 
@@ -61,12 +61,10 @@ async function main(spotifyApi) {
 
   targetList = targetList || (await spotifyApi.createPlaylist('chrismatheson', 'Target', { 'public' : false })).body;
 
-  const combined = await map(users, usr => spotifyApi.getUserPlaylists(usr))
-    .map(unwrapSuccessfullResponse)
-    .map(selectTargetplaylist)
-    .filter(list => !!list)
-    .map(list => getSongsForList(spotifyApi, list))
-    .then(compose(algo, fromPairs));
+  const combined = await Promise.filter(spotifyApi.searchPlaylists('Boarding18')
+      .then(res => res.body.playlists.items), list => contains(list.owner.id, users))
+      .map(list => getSongsForList(spotifyApi, list))
+      .then(compose(algo, fromPairs));
 
   return resetList(spotifyApi, targetList)
     .then(() => spotifyApi.addTracksToPlaylist(targetList.owner.id, targetList.id, combined))
@@ -76,7 +74,7 @@ async function main(spotifyApi) {
 }
 
 async function resetList(spotifyApi, list) {
-  const songs = await getSongsForList(spotifyApi, list)
+  const [user,songs] = await getSongsForList(spotifyApi, list)
   const req = songs.map(uri => ({uri}));
   console.log('====Removing====\n', req, '============\n');
   return spotifyApi.removeTracksFromPlaylist(list.owner.id, list.id, req);
