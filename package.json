@@ -1,0 +1,24 @@
+{
+  "name": "spot",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "bluebird": "^3.5.1",
+    "expect": "^22.4.0",
+    "express": "^4.16.2",
+    "lodash": "^4.17.5",
+    "mocha": "^5.0.1",
+    "spotify-web-api-node": "^2.5.0"
+  },
+  "devDependencies": {
+    "now": "^9.3.3"
+  },
+  "scripts": {
+    "deploy": "npx now -e SPOT_SECRET=@spot-client-secret --public && npx now alias $(pbpaste) grouplist.now.sh",
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Chris Matheson (http://www.github.com/chrismatheson)",
+  "license": "ISC"
+}
