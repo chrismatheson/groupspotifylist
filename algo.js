@@ -7,7 +7,7 @@ module.exports = function (lists, count = 25) {
 
     const missingCount = targetNumber - firstPass.length;
 
-    return firstPass.concat(take(missingCount, rest));
+    return firstPass.concat(take(missingCount, shuffle(rest)));
 };
 
 const fromEachListTake = (take) =>  compose(uniq, flatMap(take))
