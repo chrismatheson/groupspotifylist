@@ -4,7 +4,8 @@ const { createServer } = require('http');
 const { parse } = require('url');
 const express = require('express');
 const algo = require('./algo');
-const { fromPairs, compose, contains, groupBy, values, map } = require('lodash/fp');
+const { fromPairs, compose, without, concat, union, uniq, difference, once } = require('lodash/fp');
+const getSongsForList = require('./getSongsForList');
 
 const app = express();
 
@@ -18,7 +19,7 @@ const spotifyApi = new SpotifyWebApi({
 
 spotifyApi.setRefreshToken(process.env.SPOT_REFRESH_TOKEN);
 main(spotifyApi).catch(console.error);
-setInterval(() => main(spotifyApi).catch(console.error), 60000);
+setInterval(() => main(spotifyApi).catch(console.error), 30000);
 
 app.get('/healthcheck', function (req, res) {
     spotifyApi.getMe()
@@ -73,39 +74,20 @@ async function main(spotifyApi) {
 
   targetList = targetList || (await spotifyApi.createPlaylist('chrismatheson', 'Target', { 'public' : false })).body;
 
-  // const foundLists = Promise.filter(spotifyApi.searchPlaylists('Boarding18').then(res => res.body.playlists.items), list => contains(list.owner.id, users));
-
-  const combined = Promise.map(foundLists, list => getSongsForList(spotifyApi, list))
+  const whatWeWantTheListToBe = await Promise.map(foundLists, list => getSongsForList(spotifyApi, list))
       .then(compose(algo, fromPairs));
 
-  // console.log('UsersIncluded::' + (await foundLists).map(list=> list.owner.id).join(','))
+  const [ user, existingSongs ] = await getSongsForList(spotifyApi, targetList);
 
-  const batched = combined.then(z => {
-      const numOfBins = (Math.floor(z.length / 90) + 1);
-      return groupBy((x) => z.indexOf(x) % numOfBins, z)
-  }).then(x => values(x));
+  const toAdd = difference(whatWeWantTheListToBe, existingSongs);
+  const toRemove = difference(existingSongs, whatWeWantTheListToBe);
 
-    return resetList(spotifyApi, targetList)
-    .then(() => batched.map(tracks => spotifyApi.addTracksToPlaylist(targetList.owner.id, targetList.id, tracks)))
-    .then(() => combined, (err) => {
-      debugger;
-    });
-}
+  console.log(`existing ${existingSongs.length}:target${whatWeWantTheListToBe.length} adding ${toAdd}, removing${toRemove}`)
 
-async function resetList(spotifyApi, list) {
-  const [user,songs] = await getSongsForList(spotifyApi, list)
-  const req = songs.map(uri => ({uri}));
-  console.log('====Clearing List====');
-  return spotifyApi.removeTracksFromPlaylist(list.owner.id, list.id, req);
-}
+  await spotifyApi.addTracksToPlaylist(targetList.owner.id, targetList.id, toAdd.slice(0,99));
 
-async function getSongsForList(spotifyApi, list) {
-  const {tracks:{ items }} = await spotifyApi.getPlaylist(list.owner.id, list.id).then(unwrapSuccessfullResponse);
-  return [list.owner.id, items.map(x => x.track.uri)];
-}
-
-function selectTargetplaylist({items}) {
-  return items.filter(({name}) => name == 'Boarding18')[0] || null;
+  const req = toRemove.slice(0,99).map((uri) => ({uri}));
+  await spotifyApi.removeTracksFromPlaylist(targetList.owner.id, targetList.id, req);
 }
 
 function unwrapSuccessfullResponse(res) {

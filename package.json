@@ -15,7 +15,7 @@
     "now": "^9.3.3"
   },
   "scripts": {
-    "deploy": "npx now -e SPOT_SECRET=@spot-client-secret SPOT_REFRESH_TOKEN=@spot-refresh-token --public && npx now alias $(pbpaste) grouplist.now.sh",
+    "deploy": "npx now -e SPOT_SECRET=@spot-client-secret -e SPOT_REFRESH_TOKEN=@spot-refresh-token --public && npx now alias $(pbpaste) grouplist.now.sh",
     "start": "node index.js",
     "test": "mocha *.spec.js"
   },
