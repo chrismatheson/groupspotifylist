@@ -19,7 +19,7 @@ const spotifyApi = new SpotifyWebApi({
 
 spotifyApi.setRefreshToken(process.env.SPOT_REFRESH_TOKEN);
 main(spotifyApi).catch(console.error);
-setInterval(() => main(spotifyApi).catch(console.error), 30000);
+setInterval(() => main(spotifyApi).catch(console.error), 120000);
 
 app.get('/healthcheck', function (req, res) {
     spotifyApi.getMe()
