@@ -12,7 +12,7 @@
     "spotify-web-api-node": "^2.5.0"
   },
   "devDependencies": {
-    "now": "^9.3.3"
+    "now": "^10.1.4"
   },
   "scripts": {
     "deploy": "npx now -e SPOT_SECRET=@spot-client-secret -e SPOT_REFRESH_TOKEN=@spot-refresh-token --public && npx now alias $(pbpaste) grouplist.now.sh",
