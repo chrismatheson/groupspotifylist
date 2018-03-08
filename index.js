@@ -1,10 +1,8 @@
 const SpotifyWebApi = require('spotify-web-api-node');
 const Promise = require('bluebird');
-const { createServer } = require('http');
-const { parse } = require('url');
 const express = require('express');
 const algo = require('./algo');
-const { fromPairs, compose, without, concat, union, uniq, difference, once } = require('lodash/fp');
+const { fromPairs, compose, take, difference } = require('lodash/fp');
 const getSongsForList = require('./getSongsForList');
 
 const app = express();
@@ -71,7 +69,7 @@ async function main(spotifyApi) {
     console.log('SUCCESS::token refreshed - ', spotifyApi.getAccessToken());
   }, () => console.error('FAILED::token refresh'));
 
-  var targetList = (await spotifyApi.getUserPlaylists('chrismatheson').then(unwrapSuccessfullResponse)).items.filter(({name}) => name == 'Target')[0];
+  var targetList = (await spotifyApi.getUserPlaylists('chrismatheson')).body.items.filter(({name}) => name == 'Target')[0];
 
   targetList = targetList || (await spotifyApi.createPlaylist('chrismatheson', 'Target', { 'public' : false })).body;
 
@@ -85,14 +83,10 @@ async function main(spotifyApi) {
 
   console.log(`existing ${existingSongs.length}:target${whatWeWantTheListToBe.length} adding ${toAdd}, removing${toRemove}`)
 
-  await spotifyApi.addTracksToPlaylist(targetList.owner.id, targetList.id, toAdd.slice(0,99));
+  await spotifyApi.addTracksToPlaylist(targetList.owner.id, targetList.id, take(100, toAdd));
 
-  const req = toRemove.slice(0,99).map((uri) => ({uri}));
+  const req = take(100, toRemove).map((uri) => ({uri}));
   await spotifyApi.removeTracksFromPlaylist(targetList.owner.id, targetList.id, req);
-}
-
-function unwrapSuccessfullResponse(res) {
-  return res.body;
 }
 
 function persistTokens(spotifyApi) {
